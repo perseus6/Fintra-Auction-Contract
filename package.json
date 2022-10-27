@@ -5,23 +5,19 @@
   "main": "index.js",
   "scripts": {
     "compile": "npx hardhat compile",
-    "deploy:polygon": "npx hardhat run --network polygonmainnet scripts/deploy.js",
-    "verify:polygon": "npx hardhat verify --network polygonmainnet",
-    "deploy:mumbai": "npx hardhat run --network mumbai scripts/deploy.js",
-    "verify:mumbai": "npx hardhat verify --network polygontestnet",
     "test": "mocha --timeout 10000000"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/c-spider/ICO-Airdrop.git"
+    "url": "git+https://github.com/metaphy-xyz/Fintra-Contracts.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/c-spider/ICO-Airdrop/issues"
+    "url": "https://github.com/metaphy-xyz/Fintra-Contracts/issues"
   },
-  "homepage": "https://github.com/c-spider/ICO-Airdrop#readme",
+  "homepage": "https://github.com/metaphy-xyz/Fintra-Contracts#readme",
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-etherscan": "^3.0.0",
