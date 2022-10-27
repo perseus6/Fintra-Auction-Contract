@@ -127,9 +127,9 @@ contract AuctionContract is Ownable {
         require(usdtToken.balanceOf(msg.sender) >= price + feeAmount, "insufficient_funds"); 
         require(usdtToken.allowance(msg.sender, address(this)) >= price + feeAmount, "Not approved!");
 
-        usdtToken.transferFrom(msg.sender, address(this), price + feeAmount); // funding from new buyer
+        usdtToken.safeTransferFrom(msg.sender, address(this), price + feeAmount); // funding from new buyer
         if(auction.topBidder != address(0)) { //refudning to last top bid
-            usdtToken.transfer(auction.topBidder, auction.topBid + auction.feeAmount);
+            usdtToken.safeTransfer(auction.topBidder, auction.topBid + auction.feeAmount);
         }
 
         auction.topBid = price;
@@ -154,11 +154,11 @@ contract AuctionContract is Ownable {
             token.transfer(pool.owner, pool.amount);
         } else { // someone buy locked token, distribute fee
             uint256 fee_total = fee_1 + fee_2 + fee_3 + fee_4;
-            usdtToken.transfer(wallet_1, auction.feeAmount * fee_1 / fee_total);
-            usdtToken.transfer(wallet_2, auction.feeAmount * fee_2 / fee_total);
-            usdtToken.transfer(wallet_3, auction.feeAmount * fee_3 / fee_total);
-            usdtToken.transfer(wallet_4, auction.feeAmount * fee_4 / fee_total);
-            usdtToken.transfer(pool.owner, auction.topBid);
+            usdtToken.safeTransfer(wallet_1, auction.feeAmount * fee_1 / fee_total);
+            usdtToken.safeTransfer(wallet_2, auction.feeAmount * fee_2 / fee_total);
+            usdtToken.safeTransfer(wallet_3, auction.feeAmount * fee_3 / fee_total);
+            usdtToken.safeTransfer(wallet_4, auction.feeAmount * fee_4 / fee_total);
+            usdtToken.safeTransfer(pool.owner, auction.topBid);
             IERC20 token = IERC20(pool.token);
             token.transfer(auction.topBidder, pool.amount);
         }
