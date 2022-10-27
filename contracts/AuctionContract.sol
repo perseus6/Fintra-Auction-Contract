@@ -13,7 +13,7 @@ contract AuctionContract is Ownable {
     using SafeERC20 for IERC20;
     IERC20 private usdtToken;
 
-    // wallet to withdraw
+    // wallets  to withdraw auction fee
     address public wallet_1;
     address public wallet_2;
     address public wallet_3;
@@ -58,7 +58,7 @@ contract AuctionContract is Ownable {
     receive() payable external {}
     fallback() payable external {}
 
-    function lockToken(address _baseToken, uint256 _releaseTime, uint256 _amount) public {
+    function lockToken(address _baseToken, uint256 _releaseTime, uint256 _amount) public { // lock liquidity tokens
         require(_baseToken != address(0), "invalid_token");
         require(_releaseTime > block.timestamp, "incorrect_release_time");
         require(_amount > 0, "zero_amount");
@@ -80,7 +80,7 @@ contract AuctionContract is Ownable {
         poolCount ++;
     }
 
-    function startAuction(uint256 _poolId, uint256 _minPrice, uint256 _finishAuctionTime) public {
+    function startAuction(uint256 _poolId, uint256 _minPrice, uint256 _finishAuctionTime) public {  //Start Auction for looked lp
         require(_poolId != 0 && _poolId <= poolCount, "no_pool_exists");
         LockPool storage pool = pools[_poolId];
         require(pool.auctionId == 0, "already_started!");
@@ -88,12 +88,12 @@ contract AuctionContract is Ownable {
         require(pool.releaseTime > _finishAuctionTime, "incorrect_auction_limit_time");
         require(msg.sender == pool.owner, "not_pool_owner");
 
-        Auction memory newAuction;
+        Auction memory newAuction; //Create new Auction
         newAuction.poolId = _poolId;
         newAuction.minPrice = _minPrice;
         newAuction.feeAmount = 0;
-        newAuction.topBid = _minPrice;
-        newAuction.topBidder = address(0);
+        newAuction.topBid = _minPrice; // minimum price
+        newAuction.topBidder = address(0); // No proposal yet
         newAuction.auctionEndTime = _finishAuctionTime;
         newAuction.status = true;
         
@@ -102,7 +102,7 @@ contract AuctionContract is Ownable {
         auctionCount ++;
     }
 
-    function stopAuction(uint256 _auctionId) public {
+    function stopAuction(uint256 _auctionId) public {   // stop auction with currect top price
         require(_auctionId != 0 && _auctionId < auctionCount, "no_auction_exists");
         Auction storage auction = auctions[_auctionId];
         LockPool storage pool = pools[auction.poolId];
@@ -111,16 +111,16 @@ contract AuctionContract is Ownable {
         auction.status = false;
     }
 
-    function bid(uint256 _auctionId, uint256 price) public {
+    function bid(uint256 _auctionId, uint256 price) public { //bid at high price
         require(_auctionId != 0 && _auctionId < auctionCount, "no_auction_exists");
         Auction storage auction = auctions[_auctionId];
 
-        require(auction.status, "Auction not started");
+        require(auction.status, "auction_not_started");
         require(auction.auctionEndTime > block.timestamp, "Auction finished");
         require(auction.topBid < price, "low_price"); 
 
         uint256 feeAmount = price * fee_1 / 10000; // 25 for 0.25% fee_1
-        feeAmount += price * fee_2 / 10000;
+        feeAmount += price * fee_2 / 10000; // 100 for 1.0%
         feeAmount += price * fee_3 / 10000;
         feeAmount += price * fee_4 / 10000;
 
@@ -128,19 +128,19 @@ contract AuctionContract is Ownable {
         require(usdtToken.allowance(msg.sender, address(this)) >= price + feeAmount, "Not approved!");
 
         usdtToken.safeTransferFrom(msg.sender, address(this), price + feeAmount); // funding from new buyer
-        if(auction.topBidder != address(0)) { //refudning to last top bid
-            usdtToken.safeTransfer(auction.topBidder, auction.topBid + auction.feeAmount);
+        if(auction.topBidder != address(0)) { //refudning to last buyer
+            usdtToken.safeTransfer(auction.topBidder, auction.topBid + auction.feeAmount); //refund all USDT to last buyer
         }
 
-        auction.topBid = price;
-        auction.feeAmount = feeAmount;
-        auction.topBidder = msg.sender;
+        auction.topBid = price;             // update topbidding price
+        auction.feeAmount = feeAmount;      // update paid fee amount
+        auction.topBidder = msg.sender;     // top buyers
     }
 
     /**
      * @dev Withdraw  baseToken token from this contract.
      */
-    function withdrawAuction(uint256 _auctionId) public {
+    function withdrawAuction(uint256 _auctionId) public { // If auctions started, lp token cab be withdrawn on this method only
         require(_auctionId != 0 && _auctionId < auctionCount, "no_auction_exists");
         Auction storage auction = auctions[_auctionId];
         LockPool storage pool = pools[auction.poolId];
@@ -165,7 +165,7 @@ contract AuctionContract is Ownable {
         pool.isWithdrawn = true;
     }
 
-    function withdrawPool(uint256 _poolId) public {
+    function withdrawPool(uint256 _poolId) public { // lp tokens can be withdrawn by this method when auctions is not started yet.
         require(_poolId != 0 && _poolId < poolCount, "no_pool_exists");
         LockPool storage pool = pools[_poolId];
         require(pool.auctionId == 0, "auction_exists");
@@ -177,7 +177,16 @@ contract AuctionContract is Ownable {
         pool.isWithdrawn = true;
     }
 
-    function setFee(address _wallet1, address _wallet2, address _wallet3, address _wallet4, uint8 _fee1, uint8 _fee2, uint8 _fee3, uint8 _fee4) external onlyOwner {
+    function setFee(
+        address _wallet1, 
+        address _wallet2, 
+        address _wallet3, 
+        address _wallet4, 
+        uint8 _fee1, // Fee amount for _wallet1, 100 = 1.0%
+        uint8 _fee2, // Fee amount for _wallet2, 500 = 5.0%
+        uint8 _fee3, // Fee amount for _wallet3
+        uint8 _fee4  // Fee amount for _wallet4
+    ) external onlyOwner {
         wallet_1 = _wallet1;
         wallet_2 = _wallet2;
         wallet_3 = _wallet3;

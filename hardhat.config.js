@@ -22,6 +22,10 @@ module.exports = {
       url: "http://127.0.0.1:8545"
     },
     hardhat: {
+      forking: {
+        url: "https://mainnet.infura.io/v3/47496038bd364787a6d40465bec384dc",
+        blockNumber: 14390000
+      }
     },
     testbsc: {
       url: `https://data-seed-prebsc-2-s2.binance.org:8545`,
