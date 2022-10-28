@@ -47,8 +47,6 @@ describe("Test Auction Contract", function () {
     await uniswap.connect(user2).swapExactETHForTokens(0, ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", usdt.address], user2.address, timestamp + 100, {value: '10000000000000000000'});
     await uniswap.connect(user3).swapExactETHForTokens(0, ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", usdt.address], user3.address, timestamp + 100, {value: '10000000000000000000'});
 
-    
-    expect(await lp.balanceOf(owner.address)).to.equal("1000000000000000000000");
     expect(await lp.balanceOf(user1.address)).to.equal("1000000000000000000000");
     owner_usdt = await usdt.balanceOf(owner.address);
     usdt1 = await usdt.balanceOf(user1.address);

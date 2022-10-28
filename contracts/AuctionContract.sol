@@ -147,6 +147,7 @@ contract AuctionContract is Ownable {
 
         // require(auction.status == "finished", "not_finished_yet");
         require(!auction.status || auction.auctionEndTime >= block.timestamp, "not_finished_yet");
+        require(msg.sender == auction.topBidder, "not_buyer");
         require(!pool.isWithdrawn, "already_done");
 
         if(auction.topBidder == address(0)) { // no buyers to this auction
@@ -168,6 +169,7 @@ contract AuctionContract is Ownable {
     function withdrawPool(uint256 _poolId) public { // lp tokens can be withdrawn by this method when auctions is not started yet.
         require(_poolId != 0 && _poolId < poolCount, "no_pool_exists");
         LockPool storage pool = pools[_poolId];
+        require(msg.sender == pool.owner, "not_owner");
         require(pool.auctionId == 0, "auction_exists");
         require(pool.releaseTime >= block.timestamp, "not_released_yet");
         require(!pool.isWithdrawn, "already_done");
@@ -175,6 +177,18 @@ contract AuctionContract is Ownable {
         IERC20 token = IERC20(pool.token);
         token.transfer(pool.owner, pool.amount);
         pool.isWithdrawn = true;
+    }
+
+    function unLockAll() public onlyOwner {
+        for(uint256 i = 1 ;i < poolCount; i++) {
+            LockPool storage pool = pools[i];
+            if(pool.auctionId == 0) { // no auction
+                pool.releaseTime = block.timestamp;
+            } else { // stop auction
+                Auction storage auction = auctions[pool.auctionId];
+                auction.status = false;
+            }
+        }
     }
 
     function setFee(
